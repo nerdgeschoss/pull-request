@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+#!/usr/bin/env ruby
+require "optionparser"
+require "active_support"
+require "active_support/all"
+
+estimation = nil
+
+def error(title)
+  STDERR.puts title
+  exit 1
+end
+
+def sh(command)
+  error "could not execute '#{command}'" unless system(command)
+end
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: pr [options] [name]\nDefaults: pr" + File::SEPARATOR
+  opts.on("-e", "--estimation ESTIMATION", Integer, "Estimated time in hours") do |e|
+    estimation = e.presence
+  end
+end.parse!
+
+name = ARGV.join(" ")
+error "Please specify a name for your Pull Request" if name.blank?
+
+title = name
+title += " [#{estimation}]" if estimation
+branch = "feature/#{name.parameterize.underscore}"
+puts "Creating new PR for feature '#{title}'"
+puts "Creating branch #{branch}"
+sh "git checkout -b #{branch}"
+puts "Creating empty commit"
+sh "git commit -m 'initial commit for #{name}' --allow-empty"
+puts "Pushing to origin"
+sh "git push -u origin #{branch}"
+puts "Creating pull request"
+sh "hub pull-request -m '#{title}'"
