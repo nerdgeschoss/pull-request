@@ -1,6 +1,6 @@
 # coding: utf-8
 Gem::Specification.new do |spec|
-  spec.name          = "pullrequest"
+  spec.name          = "pull-request"
   spec.version       = "0.1.0"
   spec.authors       = ["Jens Ravens"]
   spec.email         = ["jens@nerdgeschoss.de"]
