@@ -32,7 +32,7 @@ Or install it yourself as:
 pr "Create clients endpoint"
 ```
 
-That would create a branch named `create_clients_endpoint` and open a pull-request named `Create clients endpoint`.
+That would create a branch named `feature/create_clients_endpoint` and open a pull-request named `Create clients endpoint`.
 
 The quotes are optional, but allow `:` and other characters to be a part of the name (otherwise interpreted by the
 shell).
