@@ -6,10 +6,16 @@ TODO: Delete this and the text above, and describe your gem
 
 ## Installation
 
+#### hub
+
+[GitHub's `hub`](https://hub.github.com/) CLI tool is required. On macOS, simply install it through `brew install hub`.
+
+### pr (pull-request)
+
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'pullrequest'
+gem 'pull-request'
 ```
 
 And then execute:
@@ -18,11 +24,18 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install pullrequest
+    $ gem install pull-request
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+pr "Create clients endpoint"
+```
+
+That would create a branch named `feature/create_clients_endpoint` and open a pull-request named `Create clients endpoint`.
+
+The quotes are optional, but allow `:` and other characters to be a part of the name (otherwise interpreted by the
+shell).
 
 ## Development
 
