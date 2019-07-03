@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-#!/usr/bin/env ruby
 require "optionparser"
 require "active_support"
 require "active_support/all"
@@ -39,20 +38,32 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-name = @issue_number ? sh_get("hub issue show #{@issue_number} -f %t") : ARGV.join(" ")
+name =
+  if @issue_number
+    sh_get("hub issue show #{@issue_number} -f %t")
+  else
+    ARGV.join(" ")
+  end
 error "Please specify a name for your Pull Request" if name.blank?
 
 title = name
 title += " [#{@estimation}]" if @estimation
 title += "\n\nfixes ##{@issue_number}" if @issue_number
 
-branch = "feature/#{name.parameterize.underscore}"
+branch = "feature/"
+branch += "#{@issue_number}_" if @issue_number
+branch += name.parameterize.underscore
+
 puts "Creating new PR for feature '#{title}'"
+
 puts "Creating branch #{branch}"
 sh "git checkout -b #{branch}"
+
 puts "Creating empty commit"
 sh "git commit -m 'initial commit for #{name}' --allow-empty"
+
 puts "Pushing to origin"
 sh "git push -u origin #{branch}"
+
 puts "Creating pull request"
 sh "hub pull-request -m '#{title}'"

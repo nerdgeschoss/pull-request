@@ -1,9 +1,9 @@
 # coding: utf-8
 Gem::Specification.new do |spec|
   spec.name          = "pull-request"
-  spec.version       = "0.1.0"
-  spec.authors       = ["Jens Ravens"]
-  spec.email         = ["jens@nerdgeschoss.de"]
+  spec.version       = "0.2.0"
+  spec.authors       = ["Jens Ravens", "David Dufour-Boivin"]
+  spec.email         = ["jens@nerdgeschoss.de", "david@nerdgeschoss.de"]
 
   spec.summary       = "Automatically create PRs for GitHub Flow"
   spec.homepage      = "https://nerdgeschoss.de"
