@@ -66,4 +66,4 @@ puts "Pushing to origin"
 sh "git push -u origin #{branch}"
 
 puts "Creating pull request"
-sh "hub pull-request -m '#{title}'"
+sh "hub pull-request -d -m '#{title}'"
