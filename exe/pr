@@ -1,42 +1,96 @@
 #!/usr/bin/env ruby
-require "optionparser"
 require "active_support"
 require "active_support/all"
+require "awesome_print"
+require "optionparser"
+require "yaml"
 
-@estimation = nil
-@simulate = false
-@issue_number = nil
+# LOAD CONFIGURATION FILE
+CONFIG_FILENAME = ".pr.yml".freeze
+@config = YAML.safe_load(File.open(CONFIG_FILENAME).read, symbolize_names: true) if File.exist?(CONFIG_FILENAME)
+@config = {} if @config.nil?
+
+def write(text)
+  print text
+  $stdout.flush
+end
 
 def error(title)
-  STDERR.puts title
+  STDERR.puts title.red
   exit 1
 end
 
+def operation(title)
+  puts title.blue
+  yield if block_given?
+end
+
 def sh(command)
-  return puts "▶️  #{command}" if @simulate
+  return puts "Would execute: ".gray + command.whiteish if @simulate
 
   error "could not execute '#{command}'" unless system(command)
 end
 
-def sh_get(command)
+def sh_get(command, nil_on_err: false)
   value = `#{command}`
-  error "could not execute '#{command}'" unless $? == 0
+  return value if $?.exitstatus == 0
+  return nil if nil_on_err
 
-  value
+  error "could not execute '#{command}'"
 end
+
+def get_from_chain(chain_of_responsibility)
+  chain_of_responsibility.each do |link|
+    value = link[:value]
+    getter = link[:getter]
+    message = link[:message]
+
+    value = getter&.call if value.blank?
+    next if value.blank?
+
+    msg = message if message.is_a?(String)
+    msg = message.call(value) if msg.blank? && message.is_a?(Proc)
+    puts msg if msg.present?
+
+    return value
+  end
+end
+
+def check_current_branch
+  current_branch = sh_get("git rev-parse --abbrev-ref HEAD").strip
+  error "Source branch of the pull request should be the configured base branch '#{@base_branch}'.\nUse option --accept-current-branch-as-source to force using currently checked out branch as the source of the pull request." if current_branch != @base_branch
+end
+
+@accept_current_branch_as_source = false
+@base_branch = nil
+@estimation = nil
+@issue_number = nil
+@simulate = false
 
 OptionParser.new do |opts|
   opts.banner = "Usage: pr [options] [name]\nDefaults: pr" + File::SEPARATOR
+  opts.on("--accept-current-branch-as-source", "Prevent from failing if the current branch (source of the PR) is not the configured base branch.") do
+    @accept_current_branch_as_source = true
+  end
+  opts.on("-b", "--base-branch BRANCH_NAME", String, "Branch on which to base the pull request (default: `master`)") do |b|
+    @base_branch = b
+  end
   opts.on("-e", "--estimation ESTIMATION", Integer, "Estimated time in hours.") do |e|
     @estimation = e.presence
-  end
-  opts.on("-s", "--simulate", "Simulate the actions: prints out the write-commands instead of executing them, prefixed with ▶️ .") do
-    @simulate = true
   end
   opts.on("-i", "--issue ISSUE_NUMBER", Integer, "Create a pull-request fixing an issue with the provided number.") do |i|
     @issue_number = i
   end
+  opts.on("-s", "--simulate", "Simulate the actions: prints out the write-commands instead of executing them.") do
+    @simulate = true
+  end
 end.parse!
+
+@base_branch = get_from_chain [
+  { value: @base_branch, message: ->(b) { "Using base branch from command line argument: #{b}" } },
+  { getter: -> { @config[:base_branch] }, message: ->(b) { "Using base branch from config file: #{b}"} },
+  { value: "master", message: "Using default base branch: master" }
+]
 
 name =
   if @issue_number
@@ -54,16 +108,18 @@ branch = "feature/"
 branch += "#{@issue_number}_" if @issue_number
 branch += name.parameterize.underscore
 
-puts "Creating new PR for feature '#{title}'"
-
-puts "Creating branch #{branch}"
-sh "git checkout -b #{branch}"
-
-puts "Creating empty commit"
-sh "git commit -m 'initial commit for #{name}' --allow-empty"
-
-puts "Pushing to origin"
-sh "git push -u origin #{branch}"
-
-puts "Creating pull request"
-sh "hub pull-request -d -m '#{title}'"
+operation "Creating new PR for feature '#{title}'" do
+  check_current_branch
+  operation "Creating branch #{branch}" do
+    sh "git checkout -b #{branch}"
+  end
+  operation "Creating empty commit" do
+    sh "git commit -m 'initial commit for #{name}' --allow-empty"
+  end
+  operation "Pushing to origin" do
+    sh "git push -u origin #{branch}"
+  end
+  operation "Creating pull request" do
+    sh "hub pull-request -d -m '#{title}' -b '#{@base_branch}'"
+  end
+end
