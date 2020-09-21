@@ -12,6 +12,12 @@ def error(title)
   exit 1
 end
 
+def confirm(title)
+  printf "#{title}\npress 'y' to continue: "
+  prompt = STDIN.gets.chomp
+  prompt == 'y'
+end
+
 def sh(command)
   return puts "▶️  #{command}" if @simulate
 
@@ -22,7 +28,11 @@ def sh_get(command)
   value = `#{command}`
   error "could not execute '#{command}'" unless $? == 0
 
-  value
+  value.strip
+end
+
+def current_branch
+  sh_get "git rev-parse --abbrev-ref HEAD"
 end
 
 OptionParser.new do |opts|
@@ -53,6 +63,9 @@ title += "\n\nfixes ##{@issue_number}" if @issue_number
 branch = "feature/"
 branch += "#{@issue_number}_" if @issue_number
 branch += name.parameterize.underscore
+base_branch = current_branch
+
+exit 1 unless ["master", "main", "develop"].include?(base_branch) || confirm("Your base branch #{base_branch} doesn't seem to be a common base branch name. Do you want to continue?")
 
 puts "Creating new PR for feature '#{title}'"
 
@@ -66,4 +79,4 @@ puts "Pushing to origin"
 sh "git push -u origin #{branch}"
 
 puts "Creating pull request"
-sh "hub pull-request -d -m '#{title}'"
+sh "hub pull-request -d -m '#{title}' -b #{base_branch}"
