@@ -32,7 +32,23 @@ def sh_get(command)
 end
 
 def current_branch
-  sh_get "git rev-parse --abbrev-ref HEAD"
+  @current_branch ||= sh_get "git rev-parse --abbrev-ref HEAD"
+end
+
+def determine_branch_name(name)
+  branch = ""
+  branch += "#{@issue_number}_" if @issue_number
+  branch += name.parameterize.underscore
+
+  if current_branch.starts_with?("epic/")
+    if confirm("Your base branch #{current_branch} is an EPIC. Do you want to create a sub-branch of that EPIC?")
+      return "#{current_branch}/#{branch}"
+    end
+  end
+
+  exit 1 unless ["master", "main", "develop"].include?(current_branch) || confirm("Your base branch #{current_branch} doesn't seem to be a common base branch name. Do you want to continue?")
+
+  "feature/#{branch}"
 end
 
 OptionParser.new do |opts|
@@ -60,12 +76,7 @@ title = name
 title += " [#{@estimation}]" if @estimation
 title += "\n\nfixes ##{@issue_number}" if @issue_number
 
-branch = "feature/"
-branch += "#{@issue_number}_" if @issue_number
-branch += name.parameterize.underscore
-base_branch = current_branch
-
-exit 1 unless ["master", "main", "develop"].include?(base_branch) || confirm("Your base branch #{base_branch} doesn't seem to be a common base branch name. Do you want to continue?")
+branch = determine_branch_name(name)
 
 puts "Creating new PR for feature '#{title}'"
 
@@ -79,4 +90,4 @@ puts "Pushing to origin"
 sh "git push -u origin #{branch}"
 
 puts "Creating pull request"
-sh "hub pull-request -d -m '#{title}' -b #{base_branch}"
+sh "hub pull-request -d -m '#{title}' -b #{current_branch}"
