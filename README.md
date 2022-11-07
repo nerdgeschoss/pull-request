@@ -6,12 +6,12 @@ Automatically branch and create an empty pull request, automating an early-revie
 
 ### Requirements
 
-#### hub
+#### GitHub CLI
 
-[GitHub's `hub`](https://hub.github.com/) CLI tool is required. On macOS, simply install it through _HomeBrew_
+[GitHub's CLI](https://cli.github.com//) (aka `gh`) is required. On _macOS_, simply install it through _HomeBrew_.
 
 ```bash
-brew install hub
+brew install gh
 ```
 
 ### Installing pr (pull-request) as part of your application
@@ -34,7 +34,7 @@ Install it yourself as:
 
 ```bash
 gem install pull-request
-````
+```
 
 ## Usage
 
@@ -69,8 +69,6 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/Jens Ravens/pullrequest. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
-
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
-
