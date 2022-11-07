@@ -35,8 +35,15 @@ def current_branch
   sh_get "git rev-parse --abbrev-ref HEAD"
 end
 
+def issue_json
+  @issue_json ||= begin
+    error "can't get issue information from GitHub unless the '-i' options is used" unless @issue_number.present?
+    JSON.parse(sh_get("gh issue view #{@issue_number} --json title"))
+  end
+end
+
 OptionParser.new do |opts|
-  opts.banner = "Usage: pr [options] [name]\nDefaults: pr" + File::SEPARATOR
+  opts.banner = "Usage: pr [options] [title]\nDefaults: pr" + File::SEPARATOR
   opts.on("-e", "--estimation ESTIMATION", Integer, "Estimated time in hours.") do |e|
     @estimation = e.presence
   end
@@ -48,23 +55,21 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-name =
-  if @issue_number
-    sh_get("hub issue show #{@issue_number} -f %t")
-  else
-    ARGV.join(" ")
-  end
-error "Please specify a name for your Pull Request" if name.blank?
-
-title = name
-title += " [#{@estimation}]" if @estimation
-title += "\n\nfixes ##{@issue_number}" if @issue_number
+name = @issue_number ? issue_json["title"] : ARGV.join(" ")
+error "Please specify a title for your Pull Request" if name.blank?
 
 branch = "feature/"
 branch += "#{@issue_number}_" if @issue_number
 branch += name.parameterize.underscore
-base_branch = current_branch
 
+title = name
+title += " [#{@estimation}]" if @estimation
+
+body_lines = []
+body_lines.push "fixes ##{@issue_number}" if @issue_number
+body = body_lines.join("\n")
+
+base_branch = current_branch
 exit 1 unless ["master", "main", "develop"].include?(base_branch) || confirm("Your base branch #{base_branch} doesn't seem to be a common base branch name. Do you want to continue?")
 
 puts "Creating new PR for feature '#{title}'"
@@ -73,10 +78,10 @@ puts "Creating branch #{branch}"
 sh "git checkout -b #{branch}"
 
 puts "Creating empty commit"
-sh "git commit -m 'initial commit for #{name}' --allow-empty"
+sh "git commit -m 'initial commit for #{title}' --allow-empty"
 
 puts "Pushing to origin"
 sh "git push -u origin #{branch}"
 
 puts "Creating pull request"
-sh "hub pull-request -d -m '#{title}' -b #{base_branch}"
+sh "gh pr create --draft --title '#{title}' --body '#{body}' --base #{base_branch}"
