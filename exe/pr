@@ -3,7 +3,6 @@ require "optionparser"
 require "active_support"
 require "active_support/all"
 
-@estimation = nil
 @simulate = false
 @issue_number = nil
 
@@ -44,9 +43,6 @@ end
 
 OptionParser.new do |opts|
   opts.banner = "Usage: pr [options] [title]\nDefaults: pr" + File::SEPARATOR
-  opts.on("-e", "--estimation ESTIMATION", Integer, "Estimated time in hours.") do |e|
-    @estimation = e.presence
-  end
   opts.on("-s", "--simulate", "Simulate the actions: prints out the write-commands instead of executing them, prefixed with ▶️ .") do
     @simulate = true
   end
@@ -63,11 +59,12 @@ branch += "#{@issue_number}_" if @issue_number
 branch += name.parameterize.underscore
 
 title = name
-title += " [#{@estimation}]" if @estimation
 
 body_lines = []
+path = ".github/pull_request_template.md"
+body_lines.push File.read(path) if File.exists?(path)
 body_lines.push "fixes ##{@issue_number}" if @issue_number
-body = body_lines.join("\n")
+body = body_lines.join("\n\n")
 
 base_branch = current_branch
 exit 1 unless ["master", "main", "develop"].include?(base_branch) || confirm("Your base branch #{base_branch} doesn't seem to be a common base branch name. Do you want to continue?")
@@ -78,10 +75,13 @@ puts "Creating branch #{branch}"
 sh "git checkout -b #{branch}"
 
 puts "Creating empty commit"
-sh "git commit -m 'initial commit for #{title}' --allow-empty"
+commit_message = "initial commit for #{title}"
+commit_message += ", fixes ##{@issue_number}" if @issue_number
+sh "git commit -m '#{commit_message}' --allow-empty"
 
 puts "Pushing to origin"
 sh "git push -u origin #{branch}"
 
 puts "Creating pull request"
-sh "gh pr create --draft --title '#{title}' --body '#{body}' --base #{base_branch}"
+ENV["PR_BODY"] = body_lines.join("\n")
+sh "gh pr create --draft --title '#{title}' --body \"$PR_BODY\" --base #{base_branch}"
