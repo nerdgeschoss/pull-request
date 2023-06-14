@@ -62,7 +62,7 @@ title = name
 
 body_lines = []
 path = ".github/pull_request_template.md"
-body_lines.push File.read(path) if File.exists?(path)
+body_lines.push File.read(path) if File.exist?(path)
 body_lines.push "fixes ##{@issue_number}" if @issue_number
 body = body_lines.join("\n\n")
 
