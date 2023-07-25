@@ -78,7 +78,7 @@ pr -i 210
 pr: cannot open 210, No such file or directory
 ```
 
-`pr` is already a command on the OS, until we override it with our GEM. If encountering this error it means that the gem has not been installed succesfully for this project.
+`pr` is already a command on the OS, until we override it with our GEM. If encountering this error it means that the gem has not been installed successfully for this Ruby version.
 
 ## License
 
