@@ -69,6 +69,17 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/Jens Ravens/pullrequest. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
+## Troubleshooting
+
+**No such file or directory**
+ 
+```
+pr -i 210
+pr: cannot open 210, No such file or directory
+```
+
+`pr` is already a command on the OS, until we override it with our GEM. If encountering this error it means that the gem has not been installed successfully for this Ruby version.
+
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
