@@ -2,6 +2,7 @@
 require "optionparser"
 require "active_support"
 require "active_support/all"
+require "shellwords"
 
 @simulate = false
 @issue_number = nil
@@ -84,4 +85,8 @@ sh "git push -u origin #{branch}"
 
 puts "Creating pull request"
 ENV["PR_BODY"] = body_lines.join("\n")
-sh "gh pr create --draft --title '#{title}' --body \"$PR_BODY\" --base #{base_branch}"
+
+escaped_title = Shellwords.escape(title)
+escaped_body = Shellwords.escape(body)
+
+sh "gh pr create --draft --title #{escaped_title} --body #{escaped_body} --base #{base_branch}"
