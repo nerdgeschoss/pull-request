@@ -61,13 +61,11 @@ branch += name.parameterize.underscore
 title = name
 
 body_lines = []
-
+path = ".github/pull_request_template.md"
 if File.exist?(path)
   body_lines = File.readlines(path).map(&:chomp)
 end
-
 body_lines.push("fixes ##{@issue_number}") if @issue_number
-
 body = body_lines.join("\n\n")
 
 base_branch = current_branch
