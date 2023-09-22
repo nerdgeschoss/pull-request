@@ -2,7 +2,6 @@
 require "optionparser"
 require "active_support"
 require "active_support/all"
-require "shellwords"
 
 @simulate = false
 @issue_number = nil
@@ -77,7 +76,7 @@ sh "git checkout -b #{branch}"
 puts "Creating empty commit"
 commit_message = "initial commit for #{title}"
 commit_message += ", fixes ##{@issue_number}" if @issue_number
-sh "git commit -m \"#{commit_message}\" --allow-empty"
+sh "git commit -m #{commit_message} --allow-empty"
 
 puts "Pushing to origin"
 sh "git push -u origin #{branch}"
