@@ -2,7 +2,6 @@
 require "optionparser"
 require "active_support"
 require "active_support/all"
-require "shellwords"
 
 @simulate = false
 @issue_number = nil
@@ -62,9 +61,13 @@ branch += name.parameterize.underscore
 title = name
 
 body_lines = []
-path = ".github/pull_request_template.md"
-body_lines.push File.read(path) if File.exist?(path)
-body_lines.push "fixes ##{@issue_number}" if @issue_number
+
+if File.exist?(path)
+  body_lines = File.readlines(path).map(&:chomp)
+end
+
+body_lines.push("fixes ##{@issue_number}") if @issue_number
+
 body = body_lines.join("\n\n")
 
 base_branch = current_branch
@@ -75,9 +78,8 @@ puts "Creating new PR for feature '#{title}'"
 puts "Creating branch #{branch}"
 sh "git checkout -b #{branch}"
 
-plain_body = body_lines.join("\n")
-escaped_title = Shellwords.escape(title)
-escaped_body = Shellwords.escape(plain_body)
+escaped_title = title.gsub("'", "\\\\'")
+escaped_body = body.gsub("'", "\\\\'")
 
 puts "Creating empty commit"
 commit_message = "initial commit for #{escaped_title}"
@@ -88,6 +90,5 @@ puts "Pushing to origin"
 sh "git push -u origin #{branch}"
 
 puts "Creating pull request"
-ENV["PR_BODY"] = plain_body
 
 sh "gh pr create --draft --title #{escaped_title} --body #{escaped_body} --base #{base_branch}"
