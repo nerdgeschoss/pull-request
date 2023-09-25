@@ -83,9 +83,7 @@ sh "git push -u origin #{branch}"
 
 puts "Creating pull request"
 
-escaped_title = title.gsub("'", "\\\\'")
-escaped_body = body_lines.join("\n").gsub("'", "\\\\'")
+escaped_title = title.gsub("'", "\\\\'").gsub('"', '\\\\"')
+escaped_body = body_lines.join("\n").gsub("'", "\\\\'").gsub('"', '\\\\"')
 
-ENV["PR_BODY"] = escaped_body
-
-sh "gh pr create --draft --title \"#{escaped_title}\" --body \"$PR_BODY\" --base #{base_branch}"
+sh "gh pr create --draft --title '#{escaped_title}' --body '#{escaped_body}' --base #{base_branch}"
