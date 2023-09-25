@@ -2,6 +2,7 @@
 require "optionparser"
 require "active_support"
 require "active_support/all"
+require "shellwords"
 
 @simulate = false
 @issue_number = nil
@@ -76,14 +77,11 @@ sh "git checkout -b #{branch}"
 puts "Creating empty commit"
 commit_message = "initial commit for #{title}"
 commit_message += ", fixes ##{@issue_number}" if @issue_number
-sh "git commit -m \"#{commit_message}\" --allow-empty"
+sh "git commit -m #{Shellwords.escape(commit_message)} --allow-empty"
 
 puts "Pushing to origin"
 sh "git push -u origin #{branch}"
 
 puts "Creating pull request"
 
-escaped_title = title.gsub("'", "\\\\'").gsub('"', '\\\\"')
-escaped_body = body_lines.join("\n").gsub("'", "\\\\'").gsub('"', '\\\\"')
-
-sh "gh pr create --draft --title '#{escaped_title}' --body '#{escaped_body}' --base #{base_branch}"
+sh "gh pr create --draft --title #{Shellwords.escape(title)} --body #{Shellwords.escape(body_lines.join("\n"))} --base #{base_branch}"
