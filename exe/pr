@@ -2,6 +2,7 @@
 require "optionparser"
 require "active_support"
 require "active_support/all"
+require "shellwords"
 
 @simulate = false
 @issue_number = nil
@@ -64,7 +65,6 @@ body_lines = []
 path = ".github/pull_request_template.md"
 body_lines.push File.read(path) if File.exist?(path)
 body_lines.push "fixes ##{@issue_number}" if @issue_number
-body = body_lines.join("\n\n")
 
 base_branch = current_branch
 exit 1 unless ["master", "main", "develop"].include?(base_branch) || confirm("Your base branch #{base_branch} doesn't seem to be a common base branch name. Do you want to continue?")
@@ -77,11 +77,11 @@ sh "git checkout -b #{branch}"
 puts "Creating empty commit"
 commit_message = "initial commit for #{title}"
 commit_message += ", fixes ##{@issue_number}" if @issue_number
-sh "git commit -m '#{commit_message}' --allow-empty"
+sh "git commit -m #{Shellwords.escape(commit_message)} --allow-empty"
 
 puts "Pushing to origin"
 sh "git push -u origin #{branch}"
 
 puts "Creating pull request"
-ENV["PR_BODY"] = body_lines.join("\n")
-sh "gh pr create --draft --title '#{title}' --body \"$PR_BODY\" --base #{base_branch}"
+
+sh "gh pr create --draft --title #{Shellwords.escape(title)} --body #{Shellwords.escape(body_lines.join("\n"))} --base #{base_branch}"
