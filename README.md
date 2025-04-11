@@ -59,6 +59,24 @@ Creates a branch named `feature/create_clients_endpoint` and open a pull-request
 The quotes are optional, but allow `:` and other characters to be a part of the name (otherwise interpreted by the
 shell).
 
+### Additional options
+
+#### Skip PR creation
+
+Use the `--no-pr` (or `-n`) option to create the branch and push it without creating a pull request:
+
+```bash
+pr -n "Create clients endpoint"
+```
+
+#### Specify remote
+
+Use the `--remote` (or `-r`) option to specify a different git remote (defaults to 'origin'):
+
+```bash
+pr -r upstream "Create clients endpoint"
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

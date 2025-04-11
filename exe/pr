@@ -6,6 +6,8 @@ require "shellwords"
 
 @simulate = false
 @issue_number = nil
+@skip_pr = false
+@remote = "origin"
 
 def error(title)
   STDERR.puts title
@@ -50,6 +52,12 @@ OptionParser.new do |opts|
   opts.on("-i", "--issue ISSUE_NUMBER", Integer, "Create a pull-request fixing an issue with the provided number.") do |i|
     @issue_number = i
   end
+  opts.on("-n", "--no-pr", "Skip creating the pull request on GitHub") do
+    @skip_pr = true
+  end
+  opts.on("-r", "--remote REMOTE_NAME", "Specify the git remote name (default: origin)") do |remote|
+    @remote = remote
+  end
 end.parse!
 
 name = @issue_number ? issue_json["title"] : ARGV.join(" ")
@@ -79,9 +87,10 @@ commit_message = "initial commit for #{title}"
 commit_message += ", fixes ##{@issue_number}" if @issue_number
 sh "git commit -m #{Shellwords.escape(commit_message)} --allow-empty"
 
-puts "Pushing to origin"
-sh "git push -u origin #{branch}"
+puts "Pushing to #{@remote}"
+sh "git push -u #{@remote} #{branch}"
 
-puts "Creating pull request"
-
-sh "gh pr create --draft --title #{Shellwords.escape(title)} --body #{Shellwords.escape(body_lines.join("\n"))} --base #{base_branch}"
+unless @skip_pr
+  puts "Creating pull request"
+  sh "gh pr create --draft --title #{Shellwords.escape(title)} --body #{Shellwords.escape(body_lines.join("\n"))} --base #{base_branch}"
+end
